@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; 
+               script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://storage.googleapis.com https://cdn.jsdelivr.net; 
+               connect-src 'self' https://storage.googleapis.com http://localhost:3001 https://unpkg.com https://cdn.jsdelivr.net https://raw.githubusercontent.com;
+               img-src 'self' data: blob: https://storage.googleapis.com;
+               style-src 'self' 'unsafe-inline';
+               worker-src blob: 'self' data: https://unpkg.com https://storage.googleapis.com;
+               script-src-elem 'self' 'unsafe-inline' https://unpkg.com https://storage.googleapis.com https://cdn.jsdelivr.net;
+               object-src 'none';
+               base-uri 'self';" />
+		<script
+			type="module"
+			src="https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.1"></script>
+	</head>
+	<body>
+		<div>
+			<div class="content">
+				<div class="card">
+					<div class="card-title">
+						<h1>Document Detector</h1>
+					</div>
+					<div class="frame">
+						<div class="component-container">
+							<jaak-stamps id="detector" debug="false"></jaak-stamps>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="button-group">
+				<div class="button-with-desc">
+					<button class="card-btn" onclick="startCapture()">Iniciar Captura</button>
+					<div class="btn-desc">
+						Ejecuta este método para comenzar el proceso de captura de una
+						identificación oficial.
+					</div>
+				</div>
+				<div class="button-with-desc">
+					<button class="card-btn" onclick="stopCapture()">Detener</button>
+					<div class="btn-desc">
+						Ejecuta este método para detener el proceso de captura. El componente
+						finalizará toda actividad en curso.
+					</div>
+				</div>
+				<div class="button-with-desc">
+					<button class="card-btn" onclick="resetCapture()">Reiniciar</button>
+					<div class="btn-desc">
+						Este método reinicia el proceso de detección de identificaciones mediante
+						el modelo de inteligencia artificial.
+					</div>
+				</div>
+				<div class="button-with-desc">
+					<button class="card-btn" onclick="getImages()">Ver Imágenes</button>
+					<div class="btn-desc">
+						Muestra las imágenes capturadas durante el proceso de detección.
+					</div>
+				</div>
+			</div>
+
+			<!-- Contenedor para mostrar las imágenes capturadas -->
+			<div id="captured-images-container" class="images-container">
+				<div class="images-section front-section">
+					<h2>Frente del Documento</h2>
+					<div class="image-row">
+						<div class="image-card">
+							<h3>Imagen Completa</h3>
+							<div class="image-placeholder">
+								<img id="front-full" src="" alt="Imagen completa del frente" />
+							</div>
+						</div>
+						<div class="image-card">
+							<h3>Documento Recortado</h3>
+							<div class="image-placeholder">
+								<img
+									id="front-cropped"
+									src=""
+									alt="Documento recortado del frente" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="images-section back-section">
+					<h2>Reverso del Documento</h2>
+					<div class="image-row">
+						<div class="image-card">
+							<h3>Imagen Completa</h3>
+							<div class="image-placeholder">
+								<img id="back-full" src="" alt="Imagen completa del reverso" />
+							</div>
+						</div>
+						<div class="image-card">
+							<h3>Documento Recortado</h3>
+							<div class="image-placeholder">
+								<img
+									id="back-cropped"
+									src=""
+									alt="Documento recortado del reverso" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="capture-metadata" class="metadata-section">
+					<!-- Aquí se mostrará la metadata de la captura -->
+				</div>
+			</div>
+		</div>
+		<style>
+			body,
+			h1,
+			h2,
+			h3,
+			p,
+			button {
+				font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+					Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+				background-color: #f8f9fc;
+				color: #202945;
+			}
+			.button-group {
+				display: flex;
+				justify-content: center;
+				gap: 2rem;
+				margin: 2rem auto 0 auto;
+				width: 100%;
+				max-width: 900px;
+			}
+			.button-with-desc {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				min-width: 180px;
+				flex: 1 1 0;
+			}
+			.btn-desc {
+				margin-top: 0.8rem;
+				font-size: 0.97rem;
+				color: #4e5a7a;
+				text-align: center;
+				background: linear-gradient(90deg, #f7faff 60%, #e8f0ff 100%);
+				border-radius: 6px;
+				padding: 0.7em 1em 0.7em 1em;
+				box-shadow: 0 2px 12px 0 rgba(32, 41, 69, 0.08);
+				font-weight: 400;
+				letter-spacing: 0.01em;
+				opacity: 0.92;
+				transition: transform 0.28s cubic-bezier(0.4, 2, 0.6, 1), box-shadow 0.28s;
+				will-change: transform, box-shadow;
+				position: relative;
+				cursor: pointer;
+			}
+			.button-with-desc:hover .btn-desc,
+			.button-with-desc:focus-within .btn-desc {
+				transform: scale(1.045) translateY(-2px);
+				box-shadow: 0 6px 22px 0 rgba(32, 41, 69, 0.17);
+				opacity: 1;
+				background: linear-gradient(90deg, #e8f0ff 0%, #d1e4ff 100%);
+			}
+
+			/* Estilos para el contenedor de imágenes */
+			.images-container {
+				width: 90%;
+				max-width: 1200px;
+				margin: 2rem auto;
+				display: none; /* Oculto por defecto, se mostrará cuando haya imágenes */
+				flex-direction: column;
+				gap: 2rem;
+			}
+
+			.images-section {
+				border-radius: 10px;
+				border: solid 1px #e5e5e5;
+				box-shadow: 0 10px 30px 0 rgba(32, 41, 69, 0.08);
+				padding: 1.5rem;
+				background: #fff;
+			}
+
+			.images-section h2 {
+				color: #202945;
+				font-size: 1.5rem;
+				margin-bottom: 1.2rem;
+				text-align: center;
+				font-weight: 500;
+			}
+
+			.image-row {
+				display: flex;
+				gap: 2rem;
+				flex-wrap: wrap;
+				justify-content: center;
+			}
+
+			.image-card {
+				flex: 1;
+				min-width: 280px;
+				max-width: 500px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			.image-card h3 {
+				color: #4e5a7a;
+				font-size: 1.2rem;
+				margin-bottom: 0.8rem;
+				font-weight: 500;
+			}
+
+			.image-placeholder {
+				width: 100%;
+				height: 240px;
+				border-radius: 8px;
+				overflow: hidden;
+				background: #f7faff;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: 1px dashed #d1e4ff;
+			}
+
+			.image-placeholder img {
+				max-width: 100%;
+				max-height: 100%;
+				object-fit: contain;
+			}
+
+			.metadata-section {
+				margin-top: 1rem;
+				padding: 1rem;
+				background: linear-gradient(90deg, #f7faff 60%, #e8f0ff 100%);
+				border-radius: 8px;
+				text-align: center;
+				color: #4e5a7a;
+				font-size: 0.95rem;
+			}
+			.card-btn {
+				border-radius: 8px;
+				border: 1px solid #e5e5e5;
+				background: #fff;
+				color: #202945;
+				box-shadow: 0 4px 16px 0 rgba(32, 41, 69, 0.08);
+				padding: 0.75rem 1.5rem;
+				font-size: 1rem;
+				font-weight: 500;
+				cursor: pointer;
+				transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+				outline: none;
+			}
+			.card-btn:hover,
+			.card-btn:focus {
+				background: #202945;
+				color: #fff;
+				box-shadow: 0 8px 24px 0 rgba(32, 41, 69, 0.18);
+			}
+			.content {
+				min-height: 70vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 10px;
+				margin-top: 1rem;
+			}
+			.card {
+				border-radius: 10px;
+				border: solid 1px #e5e5e5;
+				box-shadow: 0 10px 40px 0 rgba(32, 41, 69, 0.1);
+				height: 100%;
+				max-height: 560px;
+				width: 80%;
+				.card-title {
+					text-align: center;
+					margin-bottom: 20px;
+				}
+			}
+
+			/* Es el area total que cubrira el video*/
+			.frame {
+				align-items: center;
+				overflow-y: hidden;
+				position: relative;
+				width: 100%;
+				height: calc(
+					560px - 80px
+				); /* 560px is the cards max height; 80px is the height of the card-title */
+			}
+			.component-container {
+				position: absolute;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				right: 0;
+			}
+			.loading {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.5);
+				color: white;
+				text-align: center;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+		</style>
+
+		<script>
+			const detector = document.getElementById('detector');
+
+			// Escuchar evento de captura completada
+			detector.addEventListener('captureCompleted', (event) => {
+				console.log('Captura completada:', event.detail);
+				// event.detail contiene las imágenes capturadas
+			});
+
+			// Escuchar evento de componente listo
+			detector.addEventListener('isReady', (event) => {
+				console.log('Componente listo:', event.detail);
+				// event.detail indica si el componente está listo (true/false)
+			});
+
+			function startCapture() {
+				detector.startCapture();
+			}
+
+			function stopCapture() {
+				detector.stopCapture();
+			}
+
+			function resetCapture() {
+				detector.resetCapture();
+			}
+
+			// Precargar el modelo (opcional - mejora el rendimiento)
+			async function preloadModel() {
+				try {
+					const result = await detector.preloadModel();
+					console.log('Modelo precargado:', result);
+				} catch (error) {
+					console.error('Error al precargar:', error);
+				}
+			}
+
+			// Obtener imágenes después de la captura
+			async function getImages() {
+				try {
+					const images = await detector.getCapturedImages();
+					console.log('Imágenes capturadas:', images);
+
+					// Mostrar las imágenes en la interfaz
+					displayCapturedImages(images);
+				} catch (error) {
+					console.error('Error:', error.message);
+				}
+			}
+
+			// Función para mostrar las imágenes capturadas
+			function displayCapturedImages(images) {
+				// Mostrar el contenedor de imágenes
+				const container = document.getElementById('captured-images-container');
+				container.style.display = 'flex';
+
+				// Función auxiliar para mostrar una imagen
+				function displayImage(imageId, base64Data) {
+					const imgElement = document.getElementById(imageId);
+					if (base64Data) {
+						imgElement.src = base64Data;
+						imgElement.style.display = 'block';
+					} else {
+						imgElement.style.display = 'none';
+						imgElement.parentElement.innerHTML =
+							'<div class="no-image">No disponible</div>';
+					}
+				}
+
+				// Mostrar imágenes del frente
+				if (images.front) {
+					displayImage('front-full', images.front.fullFrame);
+					displayImage('front-cropped', images.front.cropped);
+				}
+
+				// Mostrar imágenes del reverso
+				if (images.back) {
+					displayImage('back-full', images.back.fullFrame);
+					displayImage('back-cropped', images.back.cropped);
+				}
+
+				// Mostrar metadata
+				const metadataSection = document.getElementById('capture-metadata');
+				if (images.metadata) {
+					let metadataHTML = `
+						<p><strong>Timestamp:</strong> ${new Date(images.timestamp).toLocaleString()}</p>
+						<p><strong>Total de imágenes:</strong> ${images.metadata.totalImages}</p>
+						<p><strong>Proceso completado:</strong> ${
+							images.metadata.processCompleted ? 'Sí' : 'No'
+						}</p>
+					`;
+
+					if (images.metadata.hasOwnProperty('backCaptureSkipped')) {
+						metadataHTML += `<p><strong>Captura de reverso omitida:</strong> ${
+							images.metadata.backCaptureSkipped ? 'Sí' : 'No'
+						}</p>`;
+					}
+
+					metadataSection.innerHTML = metadataHTML;
+				}
+
+				// Scroll hasta las imágenes
+				setTimeout(() => {
+					container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}, 100);
+			}
+		</script>
+	</body>
+</html>
