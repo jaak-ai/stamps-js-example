@@ -36,7 +36,7 @@ Para que tu página pueda usar nuestro componente, necesitas incluirlo. La forma
 Añade la siguiente línea de código dentro de la etiqueta `<head>` de tu archivo `index.html`:
 
 ```html
-<script type="module" src="[https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.1](https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.1)"></script>
+<script type="module" src="https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.2"></script>
 ```
 
 Tu sección `<head>` debería verse así ahora:
@@ -47,7 +47,7 @@ Tu sección `<head>` debería verse así ahora:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captura de Documentos con JAAK</title>
 
-    <script type="module" src="[https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.1](https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.1)"></script>
+    <script type="module" src="https://unpkg.com/@jaak.ai/stamps@2.0.0-beta.2"></script>
 </head>
 ```
 
